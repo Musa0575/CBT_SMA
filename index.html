@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ujian Berbasis Komputer - SMA ALMUSLIM</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #f3f4f6;
+            color: #1f2937;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .no-select {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .option-btn {
+            background-color: #ffffff;
+            border: 1.5px solid #e5e7eb;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: #2563eb;
+            background-color: #eff6ff;
+        }
+
+        .option-btn.selected {
+            background-color: #2563eb !important;
+            border-color: #1d4ed8 !important;
+            color: #ffffff !important;
+        }
+
+        .option-btn.selected span:first-child {
+            background-color: #ffffff !important;
+            color: #2563eb !important;
+            border-color: #ffffff !important;
+        }
+
+        .option-btn.selected span:last-child {
+            color: #ffffff !important;
+        }
+
+        .badge-no {
+            background-color: #ffffff;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            font-weight: 600;
+            transition: all 0.15s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .badge-no:hover {
+            border-color: #2563eb;
+            color: #2563eb;
+        }
+
+        .badge-no.active {
+            border: 2px solid #2563eb !important;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+
+        .badge-no.answered {
+            background-color: #10b981 !important;
+            color: #ffffff !important;
+            border-color: #059669 !important;
+        }
+
+        .badge-no.doubtful {
+            background-color: #f59e0b !important;
+            color: #ffffff !important;
+            border-color: #d97706 !important;
+        }
+
+        .preserve-format {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        #media-container iframe, #media-container img {
+            max-width: 100%;
+            border-radius: 6px;
+            margin: 0 auto;
+            border: 1px solid #e5e7eb;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col justify-between relative bg-slate-100 no-select" oncontextmenu="return false;" oncopy="return false;" oncut="return false;" ondragstart="return false;">
+
+    <!-- MODAL LOGIN SISWA DENGAN DROPDOWN PILIHAN UJIAN -->
+    <div id="player-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-3 sm:p-6 z-50">
+        <div class="max-w-4xl w-full bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row min-h-[540px]">
+            
+            <div class="md:w-1/2 bg-[#6c5ce7] p-8 text-white flex flex-col justify-between relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-black/10 rounded-full blur-2xl pointer-events-none"></div>
+
+                <div>
+                    <h2 class="text-3xl font-extrabold tracking-wider leading-tight uppercase font-sans">
+                        SMA ALMUSLIM<br>CBT SYSTEM
+                    </h2>
+                    <p class="text-xs text-indigo-200 mt-1">Sistem Ujian & Evaluasi Pembelajaran Digital</p>
+                </div>
+
+                <div class="my-4 flex justify-center items-center">
+                    <svg class="w-52 h-36 drop-shadow-lg" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="80" y="50" width="240" height="130" rx="10" fill="#0f172a" stroke="#00d2d3" stroke-width="4"/>
+                        <rect x="90" y="60" width="220" height="110" rx="6" fill="#1e293b"/>
+                        <path d="M110 85H290M110 105H240M110 125H270" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M170 180L160 210H240L230 180H170Z" fill="#334155"/>
+                        <ellipse cx="200" cy="210" rx="50" ry="8" fill="#1e293b"/>
+                        <rect x="120" y="220" width="160" height="30" rx="5" fill="#e2e8f0"/>
+                        <rect x="130" y="226" width="140" height="18" rx="3" fill="#cbd5e1"/>
+                        <rect x="30" y="190" width="60" height="70" rx="4" transform="rotate(-15 30 190)" fill="#ffffff"/>
+                        <line x1="45" y1="200" x2="80" y2="210" stroke="#94a3b8" stroke-width="2"/>
+                        <line x1="42" y1="210" x2="77" y2="220" stroke="#94a3b8" stroke-width="2"/>
+                        <line x1="39" y1="220" x2="74" y2="230" stroke="#94a3b8" stroke-width="2"/>
+                        <line x1="25" y1="180" x2="60" y2="250" stroke="#f59e0b" stroke-width="3"/>
+                        <rect x="310" y="180" width="35" height="65" rx="6" transform="rotate(10 310 180)" fill="#0f172a"/>
+                        <rect x="313" y="185" width="29" height="50" rx="3" transform="rotate(10 310 180)" fill="#38bdf8"/>
+                        <circle cx="290" cy="140" r="16" stroke="#ffffff" stroke-width="4" fill="rgba(255,255,255,0.2)"/>
+                        <line x1="301" y1="151" x2="320" y2="170" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 text-center text-[10px] font-medium tracking-wide border-t border-white/20 pt-3">
+                    <div class="flex flex-col items-center gap-1">
+                        <i class="fa-solid fa-user-shield text-base"></i>
+                        <span>Anti Cheat</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <i class="fa-solid fa-layer-group text-base"></i>
+                        <span>Multi Kelas</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <i class="fa-solid fa-graduation-cap text-base"></i>
+                        <span>TO & Evaluasi</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="md:w-1/2 p-6 sm:p-8 flex flex-col justify-center bg-white text-slate-800">
+                <div class="mb-4">
+                    <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight">Konfirmasi Ujian</h3>
+                    <p class="text-xs text-rose-600 font-semibold mt-1 flex items-center gap-1">
+                        <i class="fa-solid fa-lock"></i> Mode Ketat (Keluar / Pindah Tab = Diskualifikasi)
+                    </p>
+                </div>
+
+                <form onSubmit="startGameWithPlayer(event)" class="space-y-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            Nama Lengkap Peserta
+                        </label>
+                        <input type="text" id="input-player-name" required placeholder="Masukkan nama..."
+                            class="w-full bg-slate-50 border border-slate-300 focus:border-[#6c5ce7] rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none font-medium select-text">
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            Jenis Evaluasi / Ujian
+                        </label>
+                        <select id="input-player-evaluasi" required
+                            class="w-full bg-slate-50 border border-slate-300 focus:border-[#6c5ce7] rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none font-medium">
+                            <option value="">-- Pilih Jenis Ujian --</option>
+                            <optgroup label="Try Out (TO)">
+                                <option value="to1">Try Out 1 (TO 1)</option>
+                                <option value="to2">Try Out 2 (TO 2)</option>
+                                <option value="to3">Try Out 3 (TO 3)</option>
+                            </optgroup>
+                            <optgroup label="Penilaian Harian (PH)">
+                                <option value="ph1">Penilaian Harian 1 (PH 1)</option>
+                                <option value="ph2">Penilaian Harian 2 (PH 2)</option>
+                                <option value="ph3">Penilaian Harian 3 (PH 3)</option>
+                            </optgroup>
+                            <optgroup label="Ujian Semester & US">
+                                <option value="pts">Penilaian Tengah Semester (PTS)</option>
+                                <option value="pas">Penilaian Akhir Semester (PAS)</option>
+                                <option value="pat">Penilaian Akhir Tahun (PAT)</option>
+                                <option value="us">Ujian Sekolah (US)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            Pilih Kelas
+                        </label>
+                        <select id="input-player-class" required
+                            class="w-full bg-slate-50 border border-slate-300 focus:border-[#6c5ce7] rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none font-medium">
+                            <option value="">-- Pilih Kelas --</option>
+                            <optgroup label="Kelas X">
+                                <option value="X-A">X-A</option>
+                                <option value="X-B">X-B</option>
+                                <option value="X-C">X-C</option>
+                                <option value="X-D">X-D</option>
+                                <option value="X-E">X-E</option>
+                            </optgroup>
+                            <optgroup label="Kelas XI">
+                                <option value="XI-A">XI-A</option>
+                                <option value="XI-B">XI-B</option>
+                                <option value="XI-C">XI-C</option>
+                                <option value="XI-D">XI-D</option>
+                            </optgroup>
+                            <optgroup label="Kelas XII IPA">
+                                <option value="XII-IPA1">XII-IPA1</option>
+                                <option value="XII-IPA2">XII-IPA2</option>
+                                <option value="XII-IPA3">XII-IPA3</option>
+                            </optgroup>
+                            <optgroup label="Kelas XII IPS">
+                                <option value="XII-IPS1">XII-IPS1</option>
+                                <option value="XII-IPS2">XII-IPS2</option>
+                                <option value="XII-IPS3">XII-IPS3</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            Mata Pelajaran (Mapel)
+                        </label>
+                        <select id="input-player-mapel" required
+                            class="w-full bg-slate-50 border border-slate-300 focus:border-[#6c5ce7] rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none font-medium">
+                            <option value="">-- Pilih Mata Pelajaran --</option>
+                            <option value="pai">PAI & Budi Pekerti</option>
+                            <option value="bahasa_indonesia">Bahasa Indonesia</option>
+                            <option value="bahasa_inggris">Bahasa Inggris</option>
+                            <option value="matematika">Matematika</option>
+                            <option value="fisika">Fisika</option>
+                            <option value="kimia">Kimia</option>
+                            <option value="biologi">Biologi</option>
+                            <option value="sejarah">Sejarah</option>
+                            <option value="geografi">Geografi</option>
+                            <option value="informatika">Informatika</option>
+                            <option value="coding">Coding</option>
+                            <option value="pkn">PKn / PPKn</option>
+                            <option value="pjok">PJOK</option>
+                            <option value="leadership">Leadership</option>
+                            <option value="bahasa_sunda">Bahasa Sunda</option>
+                            <option value="ekonomi">Ekonomi</option>
+                            <option value="pkwu">PKWU</option>
+                            <option value="seni_budaya">Seni Budaya</option>
+                        </select>
+                    </div>
+
+                    <div class="pt-2">
+                        <button type="submit" id="btn-start" 
+                            class="w-full py-2.5 bg-[#6c5ce7] hover:bg-[#5b4bc4] text-white font-bold rounded-xl shadow-lg shadow-[#6c5ce7]/30 transition duration-200 text-xs tracking-wide flex items-center justify-center space-x-2">
+                            <span>Mulai Mengerjakan</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- HEADER TOP BAR -->
+    <header class="w-full bg-blue-900 text-white shadow-md border-b-4 border-blue-600">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-2">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-800 p-2 rounded text-amber-400">
+                    <i class="fa-solid fa-laptop-code text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-sm md:text-base tracking-wide leading-tight uppercase">CBT UTBK SMA ALMUSLIM</h1>
+                    <p id="display-mapel-header" class="text-[11px] text-blue-200">Subtes: -</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3 bg-blue-950/60 px-4 py-1.5 rounded border border-blue-800 text-xs font-medium">
+                <div><span class="text-blue-300">PESERTA:</span> <span id="display-player" class="text-white font-bold">Guest</span></div>
+                <span class="text-blue-700">|</span>
+                <div><span class="text-blue-300">TERJAWAB:</span> <span id="info-answered" class="text-emerald-400 font-bold">0</span></div>
+            </div>
+
+            <button onClick="restartGameDirect()" class="bg-blue-800 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 border border-blue-700 transition" title="Reset Ujian">
+                <i class="fa-solid fa-arrows-rotate"></i> Reset
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="w-full max-w-7xl mx-auto p-3 md:p-4 grid grid-cols-1 lg:grid-cols-4 gap-4 flex-1">
+        
+        <section class="lg:col-span-1 bg-white border border-slate-300 rounded-lg p-4 shadow-sm flex flex-col h-fit">
+            <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-200">
+                <h3 class="font-bold text-xs tracking-wider text-slate-700 uppercase flex items-center gap-1.5">
+                    <i class="fa-solid fa-th-large text-blue-700"></i> NAVIGASI SOAL
+                </h3>
+                
+                <div class="flex items-center space-x-1.5 text-xs bg-amber-50 text-amber-900 border border-amber-200 px-2 py-1 rounded font-bold">
+                    <i class="fa-regular fa-clock text-amber-600"></i>
+                    <span id="total-timer-text">00:00</span>
+                </div>
+            </div>
+            
+            <div id="ladder-container" class="grid grid-cols-5 gap-2 overflow-y-auto max-h-[220px] lg:max-h-[380px] p-1">
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 flex flex-col gap-1.5 text-[11px] text-slate-500">
+                <div class="flex items-center gap-2"><span class="w-3 h-3 bg-white border-2 border-blue-600 rounded"></span> Soal Aktif</div>
+                <div class="flex items-center gap-2"><span class="w-3 h-3 bg-emerald-500 rounded relative"><i class="fa-solid fa-check text-[8px] text-white absolute bottom-0 right-0 p-0.5"></i></span> Terjawab</div>
+                <div class="flex items-center gap-2"><span class="w-3 h-3 bg-amber-500 rounded"></span> Ragu-Ragu</div>
+                <div class="flex items-center gap-2"><span class="w-3 h-3 bg-white border border-slate-300 rounded"></span> Belum Dijawab</div>
+            </div>
+        </section>
+
+        <section class="lg:col-span-3 flex flex-col justify-between bg-white border border-slate-300 rounded-lg p-5 shadow-sm">
+            <div class="my-auto">
+                <div class="bg-white border-b border-slate-200 pb-4 mb-4 flex flex-col items-start gap-3">
+                    <div id="question-header-badge" class="flex justify-between items-center w-full">
+                        <span class="bg-blue-100 text-blue-900 text-xs font-bold px-3 py-1 rounded border border-blue-200">
+                            SOAL NOMOR <span id="question-number" class="text-blue-700">1</span> <span id="total-questions-count" class="text-slate-500 font-normal">/ 0</span>
+                        </span>
+                    </div>
+
+                    <div id="media-container" class="w-full flex justify-center py-2 hidden"></div>
+
+                    <h2 id="question-text" class="text-sm md:text-base font-normal leading-relaxed text-slate-800 text-left w-full pt-2 preserve-format">
+                        Memuat Pertanyaan...
+                    </h2>
+                </div>
+
+                <div id="options-container" class="flex flex-col gap-2.5 mt-2">
+                    <button onClick="selectOption(0)" id="opt-0" class="option-btn p-3 rounded text-left flex items-start space-x-3 text-xs md:text-sm font-normal group">
+                        <span class="w-6 h-6 rounded bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition">A</span>
+                        <span id="opt-text-0" class="text-slate-800 pt-0.5 leading-snug preserve-format">Pilihan A</span>
+                    </button>
+
+                    <button onClick="selectOption(1)" id="opt-1" class="option-btn p-3 rounded text-left flex items-start space-x-3 text-xs md:text-sm font-normal group">
+                        <span class="w-6 h-6 rounded bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition">B</span>
+                        <span id="opt-text-1" class="text-slate-800 pt-0.5 leading-snug preserve-format">Pilihan B</span>
+                    </button>
+
+                    <button onClick="selectOption(2)" id="opt-2" class="option-btn p-3 rounded text-left flex items-start space-x-3 text-xs md:text-sm font-normal group">
+                        <span class="w-6 h-6 rounded bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition">C</span>
+                        <span id="opt-text-2" class="text-slate-800 pt-0.5 leading-snug preserve-format">Pilihan C</span>
+                    </button>
+
+                    <button onClick="selectOption(3)" id="opt-3" class="option-btn p-3 rounded text-left flex items-start space-x-3 text-xs md:text-sm font-normal group">
+                        <span class="w-6 h-6 rounded bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition">D</span>
+                        <span id="opt-text-3" class="text-slate-800 pt-0.5 leading-snug preserve-format">Pilihan D</span>
+                    </button>
+
+                    <button onClick="selectOption(4)" id="opt-4" class="option-btn p-3 rounded text-left flex items-start space-x-3 text-xs md:text-sm font-normal group">
+                        <span class="w-6 h-6 rounded bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition">E</span>
+                        <span id="opt-text-4" class="text-slate-800 pt-0.5 leading-snug preserve-format">Pilihan E</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="bottom-navigation" class="flex flex-wrap items-center justify-between gap-2 mt-6 pt-4 border-t border-slate-200">
+                <button onClick="prevQuestion()" id="btn-prev" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded flex items-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-chevron-left"></i> SEBELUMNYA
+                </button>
+
+                <button onClick="toggleDoubtful()" id="btn-doubt" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded flex items-center gap-2 transition shadow-sm">
+                    <i class="fa-solid fa-triangle-exclamation"></i> RAGU-RAGU
+                </button>
+
+                <button onClick="handleNextOrFinish()" id="btn-next" class="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold rounded flex items-center gap-2 transition shadow-sm">
+                    SELANJUTNYA <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 py-2.5 text-center text-xs text-slate-500 font-medium">
+        Sistem Ujian CAT UTBK SMA ALMUSLIM &copy; 2026 - Hak Cipta Dilindungi Undang-Undang
+    </footer>
+
+    <script>
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwx8zSpoeVhYLUMEui6oMrSFNgG0OYeDdHIs9tp8AoI30TGjMxCfNKuYrWKr3ZLtO9M/exec";
+        
+        let rawQuestions = [];
+        let questions = [];
+        let userAnswers = []; 
+        let doubtfulStatus = []; 
+        let currentQuestionIdx = 0;
+        
+        let totalTimeInterval = null;
+        let totalSecondsElapsed = 0;
+        
+        let playerName = "Player";
+        let playerClass = "-";
+        let selectedEvaluasi = "-";
+        let selectedEvaluasiLabel = "-";
+        let selectedMapel = "-";
+        let selectedMapelLabel = "-";
+        let isGameStarted = false;
+
+        function requestFullScreen() {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+        }
+
+        // PENANGANAN KECURANGAN DAN TINDAKAN DI LUAR KEWAJARAN
+        document.addEventListener('visibilitychange', function() {
+            if (isGameStarted && document.visibilityState === 'hidden') {
+                instantForceClose("Berpindah Tab / Membuka Aplikasi Lain");
+            }
+        });
+
+        window.addEventListener('blur', function() {
+            if (isGameStarted) {
+                instantForceClose("Kehilangan Fokus Halaman Ujian");
+            }
+        });
+
+        document.addEventListener('fullscreenchange', function() {
+            if (isGameStarted && !document.fullscreenElement) {
+                instantForceClose("Keluar dari Mode Fullscreen (Layar Penuh)");
+            }
+        });
+
+        // PEMBLOKIRAN DENGAN PESAN KETERANGAN "TINDAKAN DI LUAR KEWAJARAN"
+        function instantForceClose(reason) {
+            if (!isGameStarted) return;
+            isGameStarted = false;
+            
+            clearInterval(totalTimeInterval);
+            
+            document.body.innerHTML = `
+                <div class="fixed inset-0 bg-slate-950 text-white flex flex-col items-center justify-center p-6 text-center z-[9999]">
+                    <div class="w-20 h-20 bg-rose-600/20 text-rose-500 rounded-full flex items-center justify-center mb-4 text-4xl border border-rose-500/30 animate-pulse">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    
+                    <h1 class="text-2xl md:text-3xl font-extrabold text-rose-500 uppercase tracking-wide mb-2">
+                        UJIAN DIBATALKAN & DIKUNCI
+                    </h1>
+                    
+                    <p class="text-sm font-semibold text-amber-400 max-w-lg mb-2">
+                        Peringatan: Sistem mendeteksi Anda telah melakukan tindakan di luar kewajaran!
+                    </p>
+                    
+                    <p class="text-xs text-slate-400 max-w-md mb-6 leading-relaxed">
+                        Indikasi Pelanggaran: <span class="text-white font-bold underline">${reason}</span>.<br>
+                        Akses lembar jawaban Anda dihentikan dan tercatat di sistem pengawas.
+                    </p>
+                    
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-xs text-slate-400 space-y-1.5 text-left mb-6 w-full max-w-xs shadow-inner">
+                        <div><span class="text-slate-500">Nama:</span> <strong class="text-white">${playerName}</strong></div>
+                        <div><span class="text-slate-500">Kelas:</span> <strong class="text-white">${playerClass}</strong></div>
+                        <div><span class="text-slate-500">Ujian:</span> <strong class="text-white">${selectedEvaluasiLabel}</strong></div>
+                        <div><span class="text-slate-500">Mapel:</span> <strong class="text-white">${selectedMapelLabel}</strong></div>
+                        <div><span class="text-slate-500">Status:</span> <span class="text-rose-400 font-bold uppercase">Didiskualifikasi</span></div>
+                    </div>
+                    
+                    <p class="text-[11px] text-slate-500">Silakan tutup halaman ini dan lapor kepada Pengawas Ujian.</p>
+                </div>
+            `;
+
+            // KIRIM DATA PELANGGARAN KE GOOGLE SHEETS
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    nama: playerName, 
+                    kelas: playerClass, 
+                    mapel: `${selectedEvaluasiLabel} - ${selectedMapelLabel}`,
+                    skor: 0,
+                    benar: 0,
+                    salah: questions.length,
+                    waktu: document.getElementById('total-timer-text') ? document.getElementById('total-timer-text').innerText : "00:00",
+                    catatan: `DIDISKUALIFIKASI: Telah melakukan tindakan di luar kewajaran (${reason})`
+                })
+            });
+
+            try { window.close(); } catch(e){}
+        }
+
+        async function fetchQuestionsDinamis(evaluasi, mapel, kelas) {
+            try {
+                const filePath = `${evaluasi}_${mapel}_${kelas}.json`;
+                const response = await fetch(filePath);
+
+                if (!response.ok) {
+                    throw new Error(`File '${filePath}' tidak ditemukan.`);
+                }
+
+                rawQuestions = await response.json();
+                
+                if (!Array.isArray(rawQuestions) || rawQuestions.length === 0) {
+                    throw new Error("Isi file soal kosong atau format JSON salah.");
+                }
+
+                document.getElementById('total-questions-count').innerText = `/ ${rawQuestions.length}`;
+                return true;
+
+            } catch (error) {
+                console.error(error);
+                alert(`SOAL BELUM TERSEDIA!\n\nFile ujian '${selectedEvaluasiLabel}' untuk Mapel '${selectedMapelLabel}' (${kelas}) belum diunggah.\n\nFile yang dicari di server: ${evaluasi}_${mapel}_${kelas}.json`);
+                return false;
+            }
+        }
+
+        async function startGameWithPlayer(e) {
+            e.preventDefault();
+            
+            const valName = document.getElementById('input-player-name').value.trim();
+            const valClass = document.getElementById('input-player-class').value;
+            const selectEvalElem = document.getElementById('input-player-evaluasi');
+            const selectMapelElem = document.getElementById('input-player-mapel');
+            
+            if (!valName || !valClass || !selectEvalElem.value || !selectMapelElem.value) {
+                alert("Harap lengkapi semua Isian Data Ujian!");
+                return;
+            }
+
+            playerName = valName;
+            playerClass = valClass;
+            selectedEvaluasi = selectEvalElem.value;
+            selectedEvaluasiLabel = selectEvalElem.options[selectEvalElem.selectedIndex].text;
+            selectedMapel = selectMapelElem.value;
+            selectedMapelLabel = selectMapelElem.options[selectMapelElem.selectedIndex].text;
+
+            const isSuccess = await fetchQuestionsDinamis(selectedEvaluasi, selectedMapel, playerClass);
+            
+            if (isSuccess) {
+                document.getElementById('display-player').innerText = `${playerName} (${playerClass})`;
+                document.getElementById('display-mapel-header').innerText = `Subtes: ${selectedEvaluasiLabel} - ${selectedMapelLabel}`;
+                document.getElementById('player-modal').classList.add('hidden');
+                
+                requestFullScreen();
+                initGame();
+            }
+        }
+
+        function prepareShuffledQuestions() {
+            questions = rawQuestions.map(q => {
+                const mappedOptions = q.options.map((opt, i) => ({ text: opt, isCorrect: i === q.answer }));
+                for (let i = mappedOptions.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [mappedOptions[i], mappedOptions[j]] = [mappedOptions[j], mappedOptions[i]];
+                }
+                const newCorrectIdx = mappedOptions.findIndex(o => o.isCorrect);
+                return {
+                    q: q.q,
+                    embed_html: q.embed_html || "",
+                    options: mappedOptions.map(o => o.text),
+                    answer: newCorrectIdx
+                };
+            });
+
+            userAnswers = new Array(questions.length).fill(null);
+            doubtfulStatus = new Array(questions.length).fill(false);
+        }
+
+        function initGame() {
+            prepareShuffledQuestions();
+            currentQuestionIdx = 0;
+            totalSecondsElapsed = 0;
+            
+            setTimeout(() => { isGameStarted = true; }, 1000);
+            
+            document.getElementById('question-header-badge').classList.remove('hidden');
+            document.getElementById('options-container').classList.remove('hidden');
+            document.getElementById('bottom-navigation').classList.remove('hidden');
+            
+            updateHeaderStats();
+            startTotalTimer();
+            renderLadder();
+            loadQuestion();
+        }
+
+        function restartGameDirect() {
+            if(confirm("Apakah Anda yakin ingin mereset dan mengulang ujian dari awal?")) {
+                clearInterval(totalTimeInterval);
+                isGameStarted = false;
+                document.getElementById('player-modal').classList.remove('hidden');
+            }
+        }
+
+        function startTotalTimer() {
+            clearInterval(totalTimeInterval);
+            totalTimeInterval = setInterval(() => {
+                totalSecondsElapsed++;
+                const mins = Math.floor(totalSecondsElapsed / 60).toString().padStart(2, '0');
+                const secs = (totalSecondsElapsed % 60).toString().padStart(2, '0');
+                document.getElementById('total-timer-text').innerText = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function updateHeaderStats() {
+            const answeredCount = userAnswers.filter(ans => ans !== null).length;
+            document.getElementById('info-answered').innerText = `${answeredCount}/${questions.length}`;
+        }
+
+        function renderLadder() {
+            const container = document.getElementById('ladder-container');
+            container.innerHTML = '';
+            for(let i = 0; i < questions.length; i++) {
+                const item = document.createElement('div');
+                let statusClass = "badge-no text-xs h-8 rounded flex items-center justify-center";
+                
+                let innerContent = `<span>${i + 1}</span>`;
+
+                if (doubtfulStatus[i]) {
+                    statusClass += " doubtful";
+                } else if (userAnswers[i] !== null) {
+                    statusClass += " answered";
+                    innerContent += `<i class="fa-solid fa-check text-[9px] absolute bottom-0.5 right-1 text-white"></i>`;
+                }
+
+                if (i === currentQuestionIdx) {
+                    statusClass += " active";
+                }
+
+                item.className = statusClass;
+                item.innerHTML = innerContent;
+                item.onclick = () => jumpToQuestion(i);
+                container.appendChild(item);
+            }
+        }
+
+        function loadQuestion() {
+            renderLadder();
+            
+            const qData = questions[currentQuestionIdx];
+            document.getElementById('question-number').innerText = currentQuestionIdx + 1;
+            document.getElementById('question-text').innerText = qData.q;
+
+            const mediaContainer = document.getElementById('media-container');
+            if (qData.embed_html && qData.embed_html.trim() !== "") {
+                mediaContainer.innerHTML = qData.embed_html;
+                mediaContainer.classList.remove('hidden');
+            } else {
+                mediaContainer.innerHTML = "";
+                mediaContainer.classList.add('hidden');
+            }
+
+            const selectedOpt = userAnswers[currentQuestionIdx];
+            for (let i = 0; i < 5; i++) {
+                const btn = document.getElementById(`opt-${i}`);
+                const textSpan = document.getElementById(`opt-text-${i}`);
+                
+                if (qData.options[i] !== undefined) {
+                    btn.classList.remove('hidden');
+                    let btnClass = "option-btn p-3 rounded text-left flex items-start space-x-3 text-xs md:text-sm font-normal group";
+                    if (selectedOpt === i) btnClass += " selected";
+                    
+                    btn.className = btnClass;
+                    textSpan.innerText = qData.options[i];
+                } else {
+                    btn.classList.add('hidden');
+                }
+            }
+
+            document.getElementById('btn-prev').disabled = (currentQuestionIdx === 0);
+            
+            const btnNext = document.getElementById('btn-next');
+            if (currentQuestionIdx === questions.length - 1) {
+                btnNext.innerHTML = `SELESAI <i class="fa-solid fa-check-double"></i>`;
+                btnNext.className = "px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded flex items-center gap-2 transition shadow-sm";
+            } else {
+                btnNext.innerHTML = `SELANJUTNYA <i class="fa-solid fa-chevron-right"></i>`;
+                btnNext.className = "px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold rounded flex items-center gap-2 transition shadow-sm";
+            }
+        }
+
+        function selectOption(idx) {
+            userAnswers[currentQuestionIdx] = idx;
+            updateHeaderStats();
+            loadQuestion();
+        }
+
+        function jumpToQuestion(idx) {
+            currentQuestionIdx = idx;
+            loadQuestion();
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIdx > 0) {
+                currentQuestionIdx--;
+                loadQuestion();
+            }
+        }
+
+        function handleNextOrFinish() {
+            if (currentQuestionIdx < questions.length - 1) {
+                currentQuestionIdx++;
+                loadQuestion();
+            } else {
+                confirmFinish();
+            }
+        }
+
+        function toggleDoubtful() {
+            doubtfulStatus[currentQuestionIdx] = !doubtfulStatus[currentQuestionIdx];
+            loadQuestion();
+        }
+
+        function confirmFinish() {
+            const unanswered = userAnswers.filter(ans => ans === null).length;
+            const doubtful = doubtfulStatus.filter(d => d === true).length;
+            
+            let msg = "Apakah Anda yakin ingin mengakhiri ujian ini?";
+            if (unanswered > 0 || doubtful > 0) {
+                msg = `Peringatan:\n`;
+                if (unanswered > 0) msg += `- Ada ${unanswered} soal yang belum dijawab.\n`;
+                if (doubtful > 0) msg += `- Ada ${doubtful} soal yang masih ditandai Ragu-Ragu.\n`;
+                msg += `\nYakin ingin menyelesaikan ujian sekarang?`;
+            }
+
+            if (confirm(msg)) {
+                endGame("Diselesaikan Normal");
+            }
+        }
+
+        function endGame(reason = "Normal Finish") {
+            clearInterval(totalTimeInterval);
+            isGameStarted = false;
+            
+            let correct = 0;
+
+            userAnswers.forEach((ans, idx) => {
+                if (ans !== null && ans === questions[idx].answer) {
+                    correct++;
+                }
+            });
+
+            const totalScore = Math.round((correct / questions.length) * 100);
+
+            document.getElementById('question-header-badge').classList.add('hidden');
+            document.getElementById('media-container').classList.add('hidden');
+
+            document.getElementById('question-text').innerHTML = `
+                <div class="text-center py-4 flex flex-col items-center justify-center">
+                    <img src="https://musa0575.github.io/asal/selamat.png" 
+                         alt="Selamat Selesai Ujian" 
+                         class="w-48 h-36 md:w-60 md:h-44 object-cover rounded-lg shadow-md mb-4 border border-slate-200">
+                    
+                    <h3 class="text-lg md:text-xl font-bold text-slate-800 uppercase tracking-wide">
+                        SELAMAT! ANDA TELAH SELESAI MENGERJAKAN UJIAN
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-1 mb-5">Ujian: ${selectedEvaluasiLabel} - ${selectedMapelLabel} (${playerClass})</p>
+                    
+                    <div class="inline-flex flex-wrap justify-center gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200 text-xs md:text-sm font-semibold shadow-inner">
+                        <span class="text-emerald-600 flex items-center gap-1.5"><i class="fa-solid fa-circle-check"></i> Benar: ${correct}</span>
+                        <span class="text-slate-300">|</span>
+                        <span class="text-rose-600 flex items-center gap-1.5"><i class="fa-solid fa-circle-xmark"></i> Salah/Kosong: ${questions.length - correct}</span>
+                        <span class="text-slate-300">|</span>
+                        <span class="text-blue-700 flex items-center gap-1.5"><i class="fa-solid fa-award"></i> Skor Akhir: ${totalScore}</span>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('options-container').classList.add('hidden');
+            document.getElementById('bottom-navigation').classList.add('hidden');
+
+            if (totalScore >= 70) {
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            }
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    nama: playerName, 
+                    kelas: playerClass, 
+                    mapel: `${selectedEvaluasiLabel} - ${selectedMapelLabel}`,
+                    skor: totalScore,
+                    benar: correct,
+                    salah: questions.length - correct,
+                    waktu: document.getElementById('total-timer-text').innerText,
+                    catatan: reason
+                })
+            });
+        }
+    </script>
+</body>
+</html>
