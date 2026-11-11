@@ -78,13 +78,13 @@
                 </div>
             </div>
 
-            <!-- SECTION PILIHAN EVALUASI, MAPEL, & KELAS UNTUK PENAMAAN AUTOMATIS -->
+            <!-- SECTION PILIHAN EVALUASI, MAPEL, KELAS, & DURASI UNTUK PENAMAAN AUTOMATIS -->
             <div class="bg-blue-950/70 p-3.5 rounded-xl border border-blue-800 flex flex-col sm:flex-row items-center gap-3">
                 <span class="text-xs font-bold text-amber-400 uppercase tracking-wider shrink-0 flex items-center gap-1.5">
                     <i class="fa-solid fa-tag"></i> Target File:
                 </span>
                 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 w-full">
                     <!-- Dropdown Jenis Evaluasi -->
                     <select id="export-evaluasi" onChange="updateDownloadPreview()" class="bg-slate-900 border border-blue-700 text-white rounded-lg px-3 py-1.5 text-xs font-medium focus:outline-none focus:border-amber-400">
                         <option value="">-- Jenis Ujian --</option>
@@ -156,6 +156,13 @@
                             <option value="XII-IPS3">XII-IPS3</option>
                         </optgroup>
                     </select>
+
+                    <!-- Input Durasi Ujian dalam Menit -->
+                    <div class="flex items-center gap-1.5 bg-slate-900 border border-blue-700 rounded-lg px-2.5 py-1">
+                        <i class="fa-solid fa-clock text-amber-400 text-xs"></i>
+                        <input type="number" id="export-duration" value="60" min="5" max="300" placeholder="Durasi (Menit)" title="Durasi Ujian (Menit)" class="w-full bg-transparent text-white text-xs font-medium focus:outline-none">
+                        <span class="text-[10px] text-blue-300 font-bold shrink-0">Mnt</span>
+                    </div>
                 </div>
 
                 <div class="text-[11px] text-blue-200 shrink-0 font-mono bg-blue-900 px-3 py-1.5 rounded border border-blue-700 w-full sm:w-auto text-center">
@@ -286,6 +293,7 @@
             }
         }
 
+        // EKSPOR JSON TERINTEGRASI DENGAN VARIABEL DURASI
         function exportJSON() {
             if (questions.length === 0) {
                 alert("Belum ada soal untuk diunduh!");
@@ -293,7 +301,14 @@
             }
 
             const fileName = document.getElementById('preview-filename').innerText;
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(questions, null, 2));
+            const durationVal = parseInt(document.getElementById('export-duration').value) || 60;
+
+            const exportObj = {
+                duration: durationVal,
+                questions: questions
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
             const anchor = document.createElement('a');
             anchor.setAttribute("href", dataStr);
             anchor.setAttribute("download", fileName);
@@ -554,7 +569,7 @@
             }
         }
 
-        // OTOMATIS AUTO-SELECT METADATA JIKA FILE JSON DIIMPORT ULANG
+        // OTOMATIS AUTO-SELECT METADATA & BACA DURASI JIKA FILE JSON DIIMPORT ULANG
         function importJSON(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -581,9 +596,16 @@
                     
                     if (Array.isArray(importedData)) {
                         questions = importedData;
+                        document.getElementById('export-duration').value = 60;
                         renderList();
                         resetForm();
                         alert(`Berhasil mengimpor ${questions.length} soal!`);
+                    } else if (importedData.questions && Array.isArray(importedData.questions)) {
+                        questions = importedData.questions;
+                        document.getElementById('export-duration').value = importedData.duration || 60;
+                        renderList();
+                        resetForm();
+                        alert(`Berhasil mengimpor ${questions.length} soal (Durasi: ${importedData.duration || 60} Menit)!`);
                     } else {
                         alert("Format JSON tidak valid! Pastikan berkas berisi daftar array soal.");
                     }
