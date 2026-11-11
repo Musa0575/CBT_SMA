@@ -396,7 +396,8 @@
     </footer>
 
     <script>
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwx8zSpoeVhYLUMEui6oMrSFNgG0OYeDdHIs9tp8AoI30TGjMxCfNKuYrWKr3ZLtO9M/exec";
+        // SCRIPT WEB APP UTAMA (SUDAH DISESUAIKAN DENGAN URL DEPLOYMENT BARU)
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5OmHt8XKGPh-S7KzJ4vuz77pu84CQHFJx7H6KB6mkvlTMgnHsZPYzrmfWe8Q0Ai-8/exec";
         
         let rawQuestions = [];
         let questions = [];
@@ -426,7 +427,7 @@
             }
         }
 
-        // PENANGANAN KECURANGAN DAN TINDAKAN DI LUAR KEWAJARAN
+        // DETEKSI KECURANGAN DAN PELANGGARAN
         document.addEventListener('visibilitychange', function() {
             if (isGameStarted && document.visibilityState === 'hidden') {
                 instantForceClose("Berpindah Tab / Membuka Aplikasi Lain");
@@ -445,7 +446,7 @@
             }
         });
 
-        // PEMBLOKIRAN DENGAN PESAN KETERANGAN "TINDAKAN DI LUAR KEWAJARAN"
+        // KUNCIAN LAYAR SAAT TERJADI KECURANGAN / TINDAKAN DI LUAR KEWAJARAN
         function instantForceClose(reason) {
             if (!isGameStarted) return;
             isGameStarted = false;
@@ -483,7 +484,7 @@
                 </div>
             `;
 
-            // KIRIM DATA PELANGGARAN KE GOOGLE SHEETS
+            // KIRIM RECORD DISKUALIFIKASI KE GOOGLE SHEETS
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
@@ -491,7 +492,8 @@
                 body: JSON.stringify({ 
                     nama: playerName, 
                     kelas: playerClass, 
-                    mapel: `${selectedEvaluasiLabel} - ${selectedMapelLabel}`,
+                    evaluasi: selectedEvaluasiLabel,
+                    mapel: selectedMapelLabel,
                     skor: 0,
                     benar: 0,
                     salah: questions.length,
@@ -786,6 +788,7 @@
                 confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
             }
 
+            // PENGIRIMAN DATA REKAP HASIL SISWA KE SPREADSHEET
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
@@ -793,7 +796,8 @@
                 body: JSON.stringify({ 
                     nama: playerName, 
                     kelas: playerClass, 
-                    mapel: `${selectedEvaluasiLabel} - ${selectedMapelLabel}`,
+                    evaluasi: selectedEvaluasiLabel,
+                    mapel: selectedMapelLabel,
                     skor: totalScore,
                     benar: correct,
                     salah: questions.length - correct,
