@@ -153,8 +153,8 @@
                         <span>Anti Cheat</span>
                     </div>
                     <div class="flex flex-col items-center gap-1">
-                        <i class="fa-solid fa-layer-group text-base"></i>
-                        <span>Multi Kelas</span>
+                        <i class="fa-solid fa-hourglass-half text-base"></i>
+                        <span>Auto Submit</span>
                     </div>
                     <div class="flex flex-col items-center gap-1">
                         <i class="fa-solid fa-graduation-cap text-base"></i>
@@ -315,7 +315,7 @@
                 </h3>
                 
                 <div class="flex items-center space-x-1.5 text-xs bg-amber-50 text-amber-900 border border-amber-200 px-2 py-1 rounded font-bold">
-                    <i class="fa-regular fa-clock text-amber-600"></i>
+                    <i class="fa-regular fa-clock text-amber-600 animate-pulse"></i>
                     <span id="total-timer-text">00:00</span>
                 </div>
             </div>
@@ -396,7 +396,7 @@
     </footer>
 
     <script>
-        // SCRIPT WEB APP UTAMA (SUDAH DISESUAIKAN DENGAN URL DEPLOYMENT BARU)
+        // SCRIPT WEB APP UTAMA
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhfeG2aVk3OnkyvuQbOzhpTU0xacUVKPFOABxnuzf28C2lh_ZQ2bL-WFmpIAyFXHIF/exec";
         
         let rawQuestions = [];
@@ -406,7 +406,8 @@
         let currentQuestionIdx = 0;
         
         let totalTimeInterval = null;
-        let totalSecondsElapsed = 0;
+        let remainingSeconds = 3600; // Sisa waktu dalam detik
+        let examDurationMinutes = 60; // Durasi default dari guru
         
         let playerName = "Player";
         let playerClass = "-";
@@ -514,9 +515,16 @@
                     throw new Error(`File '${filePath}' tidak ditemukan.`);
                 }
 
-                rawQuestions = await response.json();
+                const data = await response.json();
                 
-                if (!Array.isArray(rawQuestions) || rawQuestions.length === 0) {
+                // MENDUKUNG DUA FORMAT JSON: DENGAN / TANPA WRAPPER DURATION
+                if (Array.isArray(data)) {
+                    rawQuestions = data;
+                    examDurationMinutes = 60;
+                } else if (data.questions && Array.isArray(data.questions)) {
+                    rawQuestions = data.questions;
+                    examDurationMinutes = data.duration || 60;
+                } else {
                     throw new Error("Isi file soal kosong atau format JSON salah.");
                 }
 
@@ -553,8 +561,10 @@
             const isSuccess = await fetchQuestionsDinamis(selectedEvaluasi, selectedMapel, playerClass);
             
             if (isSuccess) {
+                remainingSeconds = examDurationMinutes * 60;
+
                 document.getElementById('display-player').innerText = `${playerName} (${playerClass})`;
-                document.getElementById('display-mapel-header').innerText = `Subtes: ${selectedEvaluasiLabel} - ${selectedMapelLabel}`;
+                document.getElementById('display-mapel-header').innerText = `Subtes: ${selectedEvaluasiLabel} - ${selectedMapelLabel} (${examDurationMinutes} Mins)`;
                 document.getElementById('player-modal').classList.add('hidden');
                 
                 requestFullScreen();
@@ -585,7 +595,6 @@
         function initGame() {
             prepareShuffledQuestions();
             currentQuestionIdx = 0;
-            totalSecondsElapsed = 0;
             
             setTimeout(() => { isGameStarted = true; }, 1000);
             
@@ -594,7 +603,7 @@
             document.getElementById('bottom-navigation').classList.remove('hidden');
             
             updateHeaderStats();
-            startTotalTimer();
+            startCountdownTimer();
             renderLadder();
             loadQuestion();
         }
@@ -607,12 +616,23 @@
             }
         }
 
-        function startTotalTimer() {
+        // HITUNG MUNDUR & AUTO-SUBMIT KETIKA HABIS WAKTU
+        function startCountdownTimer() {
             clearInterval(totalTimeInterval);
+            
             totalTimeInterval = setInterval(() => {
-                totalSecondsElapsed++;
-                const mins = Math.floor(totalSecondsElapsed / 60).toString().padStart(2, '0');
-                const secs = (totalSecondsElapsed % 60).toString().padStart(2, '0');
+                remainingSeconds--;
+
+                if (remainingSeconds <= 0) {
+                    clearInterval(totalTimeInterval);
+                    document.getElementById('total-timer-text').innerText = "00:00";
+                    alert("WAKTU UJIAN HABIS!\n\nLembar jawaban Anda akan otomatis disimpan.");
+                    endGame("Selesai (Auto-Submit Waktu Habis)");
+                    return;
+                }
+
+                const mins = Math.floor(remainingSeconds / 60).toString().padStart(2, '0');
+                const secs = (remainingSeconds % 60).toString().padStart(2, '0');
                 document.getElementById('total-timer-text').innerText = `${mins}:${secs}`;
             }, 1000);
         }
@@ -739,7 +759,7 @@
             }
 
             if (confirm(msg)) {
-                endGame("Diselesaikan Normal");
+                endGame("Diselesaikan Normal (Manual)");
             }
         }
 
@@ -788,7 +808,6 @@
                 confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
             }
 
-            // PENGIRIMAN DATA REKAP HASIL SISWA KE SPREADSHEET
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
